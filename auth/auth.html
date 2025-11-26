@@ -1,91 +1,43 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ログイン - Haru Blog Tool</title>
+  <title>Google Login</title>
 
-  <!-- Firebase Web v10 互換モード -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      padding: 40px;
-      text-align: center;
-    }
-    .box {
-      width: 100%;
-      max-width: 360px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 20px;
-      background-color: #1976d2;
-      color: white;
-      font-size: 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #145a9e;
-    }
-  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 </head>
 
 <body>
-  <div class="box">
-    <h2>Haru ブログツール</h2>
-    <p>Google アカウントでログインしてください</p>
-    <button onclick="googleLogin()">Googleでログイン</button>
-  </div>
+  <h2>Google ログイン中...</h2>
 
   <script>
-    // Firebase 設定
-    const firebaseConfig = {
-      apiKey: "AIzaSyDpKy0hT3nplcvKKnIJJecrelU-eKNKdNM",
-      authDomain: "haru-blog-tool.firebaseapp.com",
-      projectId: "haru-blog-tool",
-      storageBucket: "haru-blog-tool.firebasestorage.app",
-      messagingSenderId: "1029794481644",
-      appId: "1:1029794481644:web:d7d65346115b35117d2cc9"
-    };
+    // Firebase Config 読み込み
+    fetch("/auth/firebase_config.json")
+      .then((response) => response.json())
+      .then((config) => {
+        firebase.initializeApp(config);
+        const auth = firebase.auth();
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const provider = new firebase.auth.GoogleAuthProvider();
+        const provider = new firebase.auth.GoogleAuthProvider();
 
-    // Google ログイン
-    async function googleLogin() {
-      try {
-        await auth.signInWithRedirect(provider);
-      } catch (e) {
-        alert("ログイン失敗: " + e.message);
-      }
-    }
-
-    // Redirect 後のトークン取得
-    auth.getRedirectResult()
-      .then(async (result) => {
-        if (result?.user) {
-          const token = await result.user.getIdToken();
-
-          // ← ここだけ修正（origin で絶対URLに）
-          window.location.href = window.location.origin + "/?token=" + token;
-        }
-      })
-      .catch((error) => {
-        console.error("Redirect Error:", error);
+        auth.signInWithPopup(provider)
+          .then((result) => {
+            result.user.getIdToken().then((token) => {
+              // Streamlit 本番URLにリダイレクト
+              window.location.href =
+                "https://haru-blog-tool-npjsqczavgftaswdkt4u24.streamlit.app/?token=" +
+                token;
+            });
+          })
+          .catch((error) => {
+            document.body.innerHTML =
+              "<h3>ログインに失敗しました。</h3><p>" +
+              error.message +
+              "</p>";
+          });
       });
   </script>
 </body>
 </html>
+

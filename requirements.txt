@@ -1,0 +1,7 @@
+streamlit
+pandas
+requests
+gspread
+google-auth
+openai
+PyJWT

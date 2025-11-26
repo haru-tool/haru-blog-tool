@@ -13,7 +13,7 @@
 
   <script>
     // Firebase Config 読み込み
-    fetch("/auth/firebase_config.json")
+    fetch("/static/firebase_config.json")
       .then((response) => response.json())
       .then((config) => {
         firebase.initializeApp(config);

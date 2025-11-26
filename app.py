@@ -20,8 +20,9 @@ st.set_page_config(page_title="Haru Blog Tool", layout="wide")
 # Firebase Config 読み込み（static/firebase_config.json）
 # ============================================================
 def load_firebase_config():
-    # Streamlit Cloud では相対パスでOK
-    config_path = "static/firebase_config.json"
+    # Streamlit Cloud では、リポジトリのルートがカレントディレクトリになる想定
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(base_dir, "static", "firebase_config.json")
 
     if not os.path.exists(config_path):
         st.error("❌ firebase_config.json が見つかりません")
@@ -41,16 +42,22 @@ def show_login_screen():
     st.markdown("### 🔐 Google ログイン")
     st.markdown("ログインして Haru Blog Tool を利用してください。")
 
+    if firebase_config is None:
+        st.error("Firebase 設定が読み込めていません。static/firebase_config.json を確認してください。")
+        return
+
     st.info("下のボタンをクリックして Google ログインページ（別タブ）が開きます。")
 
-    # 🔥 Streamlit の静的ファイルは /static/ に配置される
-    st.link_button("Google でログイン", "/static/auth.html")
+    # 🔥 「static/auth.html」（先頭の / を付けない）の相対パスでリンク
+    st.link_button("Google でログイン", "static/auth.html")
 
 
 # ============================================================
 # JWT 検証（Firebase ID Token）
 # ============================================================
-def verify_firebase_token(id_token):
+def verify_firebase_token(id_token: str | None):
+    if not id_token:
+        return None
     try:
         decoded = jwt.decode(
             id_token,
@@ -266,7 +273,9 @@ def show_main_app(user):
 # ============================================================
 # 認証フロー判定
 # ============================================================
-token = st.query_params.get("token", None)
+# st.query_params は Dict ライクなオブジェクト。to_dict() 経由で文字列にしておく
+params = st.query_params.to_dict()
+token = params.get("token")  # 文字列 or None
 
 if not token:
     show_login_screen()
@@ -276,4 +285,5 @@ else:
         show_login_screen()
     else:
         show_main_app(user)
+
 

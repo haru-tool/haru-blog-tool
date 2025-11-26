@@ -1,42 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Google Login</title>
+    <meta charset="UTF-8" />
+    <title>Googleログイン</title>
 
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 </head>
-
 <body>
-  <h2>Google ログイン中...</h2>
 
-  <script>
-    // Firebase Config 読み込み
+<h2>Googleログイン中...</h2>
+
+<script>
+    // Firebase 設定の読み込み
     fetch("/static/firebase_config.json")
-      .then((response) => response.json())
-      .then((config) => {
-        firebase.initializeApp(config);
-        const auth = firebase.auth();
+        .then(res => res.json())
+        .then(config => {
+            // Firebase 初期化
+            firebase.initializeApp(config);
 
-        const provider = new firebase.auth.GoogleAuthProvider();
+            const provider = new firebase.auth.GoogleAuthProvider();
 
-        auth.signInWithPopup(provider)
-          .then((result) => {
-            result.user.getIdToken().then((token) => {
-              // Streamlit 本番URLにリダイレクト
-              window.location.href =
-                "https://haru-blog-tool-npjsqczavgftaswdkt4u24.streamlit.app/?token=" +
-                token;
-            });
-          })
-          .catch((error) => {
-            document.body.innerHTML =
-              "<h3>ログインに失敗しました。</h3><p>" +
-              error.message +
-              "</p>";
-          });
-      });
-  </script>
+            firebase.auth().signInWithPopup(provider)
+                .then(result => {
+                    return result.user.getIdToken();
+                })
+                .then(token => {
+                    // Google ログイン成功 → Streamlit に token を渡す
+                    window.location.href = "/?token=" + token;
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("ログインに失敗しました");
+                });
+        })
+        .catch(err => {
+            console.error("設定読み込み失敗", err);
+            alert("Firebase 設定を読み込めませんでした");
+        });
+</script>
+
 </body>
 </html>
+

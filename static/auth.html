@@ -2,42 +2,80 @@
 <html>
 <head>
     <meta charset="UTF-8" />
-    <title>Googleログイン</title>
+    <title>Googleログイン | Haru Blog Tool</title>
 
+    <!-- Firebase compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 </head>
 <body>
+    <h2>Haru Blog Tool - Googleログイン</h2>
 
-<h2>Googleログイン中...</h2>
+    <p id="status">auth.html を読み込みました。</p>
+    <button id="loginBtn">Googleでログイン</button>
 
-<script>
-    // Firebase 設定の読み込み（相対パス）
-    fetch("firebase_config.json")
-        .then(res => res.json())
-        .then(config => {
+    <pre id="debug" style="border:1px solid #ccc; padding:8px; max-width:600px; white-space:pre-wrap;"></pre>
 
-            firebase.initializeApp(config);
+    <script>
+        const statusEl = document.getElementById("status");
+        const debugEl = document.getElementById("debug");
+        const loginBtn = document.getElementById("loginBtn");
 
-            const provider = new firebase.auth.GoogleAuthProvider();
+        function log(msg) {
+            console.log(msg);
+            debugEl.textContent += msg + "\n";
+        }
 
-            firebase.auth().signInWithPopup(provider)
-                .then(result => result.user.getIdToken())
-                .then(token => {
-                    window.location.href = "/?token=" + token;
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert("ログインに失敗しました");
-                });
-        })
-        .catch(err => {
-            console.error("設定読み込み失敗", err);
-            alert("Firebase 設定を読み込めませんでした");
-        });
-</script>
+        log("auth.html JS 開始");
 
+        // 1) Firebase 設定の読み込み（同じ static フォルダ内）
+        fetch("firebase_config.json")
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error("HTTP " + res.status);
+                }
+                log("firebase_config.json 取得成功");
+                return res.json();
+            })
+            .then(config => {
+                log("Firebase.initializeApp 実行");
+                firebase.initializeApp(config);
+
+                const provider = new firebase.auth.GoogleAuthProvider();
+
+                // 2) ボタンクリックで Google ログイン開始
+                loginBtn.onclick = () => {
+                    statusEl.textContent = "Google へ接続中...";
+                    log("signInWithPopup 開始");
+
+                    firebase.auth().signInWithPopup(provider)
+                        .then(result => {
+                            log("Google ログイン成功");
+                            return result.user.getIdToken();
+                        })
+                        .then(token => {
+                            log("ID トークン取得成功");
+                            statusEl.textContent = "ログイン成功。アプリに戻ります...";
+
+                            // 3) Streamlit アプリへトークンを渡してリダイレクト
+                            const url = "/?token=" + encodeURIComponent(token);
+                            log("リダイレクト先: " + url);
+                            window.location.href = url;
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            statusEl.textContent = "ログインに失敗しました: " + err.message;
+                            log("エラー: " + err.message);
+                        });
+                };
+
+                statusEl.textContent = "Firebase 設定読み込み完了。ボタンを押してログインしてください。";
+            })
+            .catch(err => {
+                console.error(err);
+                statusEl.textContent = "Firebase 設定を読み込めませんでした。";
+                log("設定読み込みエラー: " + err);
+            });
+    </script>
 </body>
 </html>
-
-

@@ -17,11 +17,11 @@ st.set_page_config(page_title="Haru Blog Tool", layout="wide")
 
 
 # ============================================================
-# Firebase Config 読み込み（auth/firebase_config.json を絶対パスで読む）
+# Firebase Config 読み込み（static/firebase_config.json）
 # ============================================================
 def load_firebase_config():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, "auth", "firebase_config.json")
+    # Streamlit Cloud では相対パスでOK
+    config_path = "static/firebase_config.json"
 
     if not os.path.exists(config_path):
         st.error("❌ firebase_config.json が見つかりません")
@@ -43,7 +43,7 @@ def show_login_screen():
 
     st.info("下のボタンをクリックして Google ログインページ（別タブ）が開きます。")
 
-    # 🔥 Streamlit の静的ファイルは /static/ にマウントされる
+    # 🔥 Streamlit の静的ファイルは /static/ に配置される
     st.link_button("Google でログイン", "/static/auth.html")
 
 
@@ -182,7 +182,6 @@ URL: {p.URL}
 トーン: {tone_text}
 自然な紹介文＋3つのハッシュタグ
 """
-
                 try:
                     res = client.chat.completions.create(
                         model="gpt-4.1-mini",
@@ -277,3 +276,4 @@ else:
         show_login_screen()
     else:
         show_main_app(user)
+

@@ -12,21 +12,18 @@
 <h2>Googleログイン中...</h2>
 
 <script>
-    // Firebase 設定の読み込み
-    fetch("/static/firebase_config.json")
+    // Firebase 設定の読み込み（相対パス）
+    fetch("firebase_config.json")
         .then(res => res.json())
         .then(config => {
-            // Firebase 初期化
+
             firebase.initializeApp(config);
 
             const provider = new firebase.auth.GoogleAuthProvider();
 
             firebase.auth().signInWithPopup(provider)
-                .then(result => {
-                    return result.user.getIdToken();
-                })
+                .then(result => result.user.getIdToken())
                 .then(token => {
-                    // Google ログイン成功 → Streamlit に token を渡す
                     window.location.href = "/?token=" + token;
                 })
                 .catch(err => {
@@ -42,4 +39,5 @@
 
 </body>
 </html>
+
 
